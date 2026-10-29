@@ -21,28 +21,18 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Revisar archivos del proyecto
+      -       - name: Preparar Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Preparar proyecto
         shell: bash
         run: |
           set -e
-          ZIP=$(find . -maxdepth 2 -type f -name '*.zip' | head -n 1)
-          if [ -z "$ZIP" ]; then
-            echo "ERROR: No se encontró el ZIP del proyecto."
-            exit 1
-          fi
           mkdir -p extracted
-          unzip -q "$ZIP" -d extracted
-          WRAPPER=$(find extracted -type f -name gradlew | head -n 1)
-          if [ -z "$WRAPPER" ]; then
-            echo "ERROR: El ZIP no contiene gradlew."
-            find extracted -maxdepth 4 -type f | head -n 80
-            exit 1
-          fi
-          PROJECT_DIR=$(dirname "$WRAPPER")
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-          chmod +x "$WRAPPER"
+          unzip -q "$(find . -maxdepth 2 -type f -name '*.zip' | head -n 1)" -d extracted
+          echo "PROJECT_DIR=extracted/HeroesTimer" >> "$GITHUB_ENV"
 
-      - name: Compilar APK
+      - name:           ./gradlew assembleDebug
         run: |
           cd "$PROJECT_DIR"
           ./gradlew assembleDebug
