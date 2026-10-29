@@ -10,7 +10,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Descargar repositorio
         uses: actions/checkout@v4
@@ -21,26 +20,34 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      -       - name: Preparar Gradle
+      - name: Preparar Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Preparar proyecto
+      - name: Extraer proyecto
         shell: bash
         run: |
           set -e
+          ZIP="$(find . -maxdepth 2 -type f -name '*.zip' | head -n 1)"
+          if [ -z "$ZIP" ]; then
+            echo "No se encontró el ZIP del proyecto"
+            exit 1
+          fi
           mkdir -p extracted
-          unzip -q "$(find . -maxdepth 2 -type f -name '*.zip' | head -n 1)" -d extracted
-          echo "PROJECT_DIR=extracted/HeroesTimer" >> "$GITHUB_ENV"
+          unzip -q "$ZIP" -d extracted
+          if [ ! -f extracted/HeroesTimer/settings.gradle ]; then
+            echo "No se encontró extracted/HeroesTimer/settings.gradle"
+            find extracted -maxdepth 4 -type f | head -n 80
+            exit 1
+          fi
 
-      - name:          gradle assembleDebug
-        run: |
-          cd "$PROJECT_DIR"
-          ./gradlew assembleDebug
+      - name: Compilar APK
+        working-directory: extracted/HeroesTimer
+        run: gradle assembleDebug
 
       - name: Guardar APK
         uses: actions/upload-artifact@v4
         with:
           name: HeroesTrainingTimer-APK
-          path: extracted/**/build/outputs/apk/debug/*.apk
+          path: extracted/HeroesTimer/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           
