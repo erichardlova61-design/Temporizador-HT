@@ -32,7 +32,7 @@ jobs:
           unzip -q "$(find . -maxdepth 2 -type f -name '*.zip' | head -n 1)" -d extracted
           echo "PROJECT_DIR=extracted/HeroesTimer" >> "$GITHUB_ENV"
 
-      - name:           ./gradlew assembleDebug
+      - name:          gradle assembleDebug
         run: |
           cd "$PROJECT_DIR"
           ./gradlew assembleDebug
